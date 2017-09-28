@@ -1,0 +1,14 @@
+//fixed  monthlly payment： P = (monthly rate * Loanamount) / (1 - (1+monthly interest rate)^-n)
+//6000 loan, 年利率是6%，分5年还清，down payment是0
+public class PaymentFunction {
+    public String calculateFunction(double loan, double rate, int years, double downPayment) {
+        double monthlyPayment = (rate * (loan - downPayment)) / (1 - 1 / Math.pow((1 + rate), years));
+        return String.format("%.2f",monthlyPayment);
+    }
+
+    public static void main(String[] args) {
+        PaymentFunction paymentFunction = new PaymentFunction();
+        String result = paymentFunction.calculateFunction(100, 0.05, 5, 20);
+        System.out.println(result);
+    }
+}
