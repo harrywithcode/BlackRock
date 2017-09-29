@@ -1,0 +1,63 @@
+//给两个投资组合，一个叫port，一个叫benchmark，算一下每一个stock在两个投资组合中的比例的差值
+//e.g.  input: "PORT:AXN,10,10;BGT,20,30;CXZ,10,30|BENCH:AXN,50,10;BGT,30,30;DFG,30,20"
+// （stock name, stock qty, stock price;）
+//expected output: AXN:-15.00,BGT:-15.00,CXZ:30.00,DFG:-30.00 （AXN在port中占10%，在bench中占25%，差值-15.00%）
+
+//maybe you need to trim
+
+import java.util.*;
+
+public class StockPercents {
+    public String calculatePercents(final String inputString) {
+        String port = inputString.split("\\|")[0];
+        String benchmark = inputString.split("\\|")[1];
+
+        String[] portData = port.split(":")[1].split(",|;");
+        String[] benchmarkData = benchmark.split(":")[1].split(",|;");
+
+        Map<String, Double> portStock = new TreeMap<>();
+        Map<String, Double> benchmarkStock = new TreeMap<>();
+
+        double sumPort = 0;
+        double sumBenchmark = 0;
+
+        for (int i = 0; i < portData.length - 2; i += 3) {
+            double portValue = Double.valueOf(portData[i + 1]) * Double.valueOf(portData[i + 2]);
+            double benchmarkValue = Double.valueOf(benchmarkData[i + 1]) * Double.valueOf(benchmarkData[i + 2]);
+
+            sumPort += portValue;
+            sumBenchmark += benchmarkValue;
+        }
+
+        Set<String> stockName = new TreeSet<>();
+
+        for (int i = 0; i < portData.length - 2; i += 3) {
+            double portValue = Double.valueOf(portData[i + 1]) * Double.valueOf(portData[i + 2]);
+            double benchmarkValue = Double.valueOf(benchmarkData[i + 1]) * Double.valueOf(benchmarkData[i + 2]);
+
+            portStock.put(portData[i], portValue / sumPort);
+            benchmarkStock.put(benchmarkData[i], benchmarkValue / sumBenchmark);
+            stockName.add(portData[i]);
+            stockName.add(benchmarkData[i]);
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String name : stockName) {
+            double distance = 0;
+            stringBuilder.append(name);
+            stringBuilder.append(":");
+
+            distance = portStock.getOrDefault(name, 0.0) - benchmarkStock.getOrDefault(name, 0.0);
+
+            stringBuilder.append(String.format("%.2f",distance));
+            stringBuilder.append(",");
+        }
+        return stringBuilder.deleteCharAt(stringBuilder.length() - 1).toString();
+    }
+
+    public static void main(String[] args) {
+        StockPercents stockPercents = new StockPercents();
+        String input = "PORT:AXN,10,10;BGT,20,30;CXZ,10,30|BENCH:AXN,50,10;BGT,30,30;DFG,30,20";
+        String result = stockPercents.calculatePercents(input);
+        System.out.println(result);
+    }
+}
