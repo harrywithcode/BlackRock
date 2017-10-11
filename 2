@@ -1,0 +1,75 @@
+package ExpiredMap;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
+
+public class ExpiredMapMultiThread<K, V> implements Runnable{
+    public class TimeRecorder {
+        private Object key;
+        private long expiredTime;
+
+        public TimeRecorder(Object key, long duration) {
+            this.key = key;
+            this.expiredTime = duration + System.currentTimeMillis();
+        }
+
+        public Object getKey() {
+            return key;
+        }
+        public long getExpiredTime() {
+            return expiredTime;
+        }
+    }
+
+    private Map<K, V> expiredMap= new HashMap<>();
+    PriorityQueue<TimeRecorder> queue = new PriorityQueue(new Checker());
+
+    class Checker implements Comparator<TimeRecorder> {
+        @Override
+        public int compare(TimeRecorder o1, TimeRecorder o2) {
+            if (o1.getExpiredTime() > o2.getExpiredTime()) {
+                return 1;
+            } else if (o1.getExpiredTime() < o2.getExpiredTime()) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    public synchronized void put(final K key, final V value, final long duration) {
+        expiredMap.put(key, value);
+        long expireTime = duration + System.currentTimeMillis();
+        TimeRecorder timer = new TimeRecorder(key, expireTime);
+        queue.add(timer);
+    }
+    public V get(final K key) {
+        if (!expiredMap.containsKey(key)) {
+            return null;
+        } else {
+            return expiredMap.get(key);
+        }
+    }
+
+    public void run() {
+        TimeRecorder timer = queue.peek();
+        while (timer.getExpiredTime() < System.currentTimeMillis()) {
+            Object key = queue.poll().getKey();
+            expiredMap.remove(key);
+            timer = queue.peek();
+        }
+    }
+
+    public static void main(String[] args) {
+        ExpiredMapMultiThread e = new ExpiredMapMultiThread();
+        long duration = 3000;
+        e.put(1,1,duration);
+        e.put(2,2,duration);
+        e.put(3,3,duration);
+
+        Thread cleanThread = new Thread(e);
+        cleanThread.start();
+    }
+}
