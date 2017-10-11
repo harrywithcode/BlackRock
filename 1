@@ -1,0 +1,37 @@
+package ExpiredMap;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class ExpiredMap<K, V> {
+    private class Data {
+        private V value;
+        private long expiredTime;
+
+        public Data(V value, long duration) {
+            this.value = value;
+            this.expiredTime = System.currentTimeMillis() + duration;
+        }
+    }
+    Map<K, Data> expiredMap = new HashMap<>();
+
+    public void put(final K key, final V value, final long duration) {
+        Data data = new Data(value, duration);
+        expiredMap.put(key, data);
+    }
+    public V get(final K key) {
+        if (!expiredMap.containsKey(key)) {
+            return null;
+        } else {
+            Data queriedValue = expiredMap.get(key);
+            long expectedExpiredTime = queriedValue.expiredTime;
+
+            if (expectedExpiredTime > System.currentTimeMillis()) {
+                return queriedValue.value;
+            } else {
+                expiredMap.remove(key);
+                return null;
+            }
+        }
+    }
+}
